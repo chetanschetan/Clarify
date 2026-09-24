@@ -12,6 +12,7 @@ AND signup_date < date_trunc('month', current_date);
 
 -> docker compose exec db psql -U clarify -d clarify -c "SELECT COUNT(*) FROM customers WHERE signup_date >= date_trunc('month', current_date - interval '1 month') AND signup_date < date_trunc('month', current_date);"
 
+    output:  431
 
 Q2: Pichle calendar month me total revenue kitna tha? (refunded orders exclude karke)
 
@@ -35,7 +36,7 @@ WHERE order_date >= date_trunc('month', current_date - interval '1 month')
 
         Jab bhi Postgres current_date dekhta hai query me, wo usse compute karke ek actual date value se replace kar deta hai, jaise 2026-09-17 — bilkul waise jaise Python me date.today() aaj ki date deta hai, kisi table se nahi.
 
-
+        output: 1016654.01
 
 Q3: All-time top 10 customers by total spend
 Yahan problem ye hai: orders table me sirf customer_id hai (ek number), naam nahi. Humein customer ka naam dikhana hai (identify karne ke liye), par spend orders table se aata hai. Do tables ka data ek saath chahiye — yahi JOIN ka kaam hai.
@@ -59,6 +60,19 @@ LIMIT 10;
     Note: refunded orders included as "spend" here (gross). 
     Alag interpretation ho sakta hai — ye ambiguity ka example hai jo Phase 5 me formally handle hoga.
 
+    output: first_name | last_name | total_spend 
+            ------------+-----------+-------------
+            Ryan       | Greene    |    15807.07
+            Maureen    | Harrison  |    14870.36
+            Tina       | May       |    14752.36
+            Antonio    | Patterson |    14373.28
+            Andrea     | Campbell  |    13983.92
+            Hunter     | Kennedy   |    13539.95
+            Adrienne   | Owens     |    13344.90
+            Kelly      | Norman    |    13104.10
+            Heather    | Conner    |    12853.94
+            Jacob      | Dominguez |    12798.46
+            (10 rows)
 
 Q4: Last 90 days ke top 10 customers by number of orders
 Naya cheez: "last 90 days" (rolling window) Q1/Q2 ke "last calendar month" (date_trunc) se alag hai. Rolling window ke liye simple pattern hai:
@@ -159,7 +173,14 @@ ORDER BY refunded_data DESC;
     o.status == 'refund'   -- galat
     o.status = 'refunded'  -- sahi
 
-
+    output: category   | order_count | refunded_data                                        
+            -------------+-------------+---------------                 
+            Apparel     |        4810 |           333
+            Home        |        4676 |           316
+            Books       |        4765 |           306
+            Beauty      |        4513 |           303
+            Electronics |        3448 |           216
+            (5 rows)
 
 Q7: Har mahine ka average order value (AOV) kya hai, pichle 6 mahino ka?
 

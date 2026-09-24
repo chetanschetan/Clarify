@@ -79,7 +79,7 @@ class Question(BaseModel):
 def ask(q: Question):
     body = {
         "system_instruction": {
-            "parts": [{"text": "You are a helpful assistant that always responds in the requested JSON format."}]
+            "parts": [{"text": "You are a helpful assistant that always responds in the requested JSON format. Always use valid PostgreSQL syntax — for example, use INTERVAL '30 days' (number and unit together in one string), not INTERVAL '30' DAYS."}]
         },
         "contents": [
             {"parts": [{"text": f"""
@@ -126,6 +126,9 @@ def ask(q: Question):
         check_query_cost(final_sql)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except psycopg.Error as e:
+        conn.rollback()
+        raise HTTPException(status_code=400, detail=f"Generated SQL is invalid: {e}")
 
     try:
         cur.execute(final_sql)
