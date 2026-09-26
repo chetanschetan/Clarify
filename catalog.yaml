@@ -1,0 +1,56 @@
+tables:
+  customers:
+    description: "A customer's profile — signup details, location, and test-account flag"
+    columns:
+      id: "Unique customer identifier"
+      first_name: "Customer's first name"
+      last_name: "Customer's last name"
+      email: "Unique email address"
+      country: "Customer's country"
+      signup_date: "Date the customer created their account"
+      is_test_account: "TRUE if this is an internal/test account — generally exclude from analytics unless explicitly asked to include it"
+
+  products:
+    description: "The product catalog — items that can be ordered"
+    columns:
+      id: "Unique product identifier"
+      name: "Product name"
+      category: "Product category, e.g. Electronics, Apparel, Home, Books, Beauty"
+      price: "Current list price of the product — may differ from the price actually paid on past orders, see order_items.unit_price"
+      created_at: "Date the product was added to the catalog"
+
+  orders:
+    description: "An order placed by a customer, with status and total value"
+    columns:
+      id: "Unique order identifier"
+      customer_id: "References customers.id"
+      order_date: "Date the order was placed"
+      status: "completed, cancelled, or refunded — handle carefully when calculating 'total revenue', since interpretations vary on whether cancelled/refunded orders should count"
+      total_amount: "Total value of the order, summed from its order_items"
+
+  order_items:
+    description: "Individual line items within an order — one row per product per order"
+    columns:
+      id: "Unique order_item identifier"
+      order_id: "References orders.id"
+      product_id: "References products.id"
+      quantity: "Number of units of this product in the order"
+      unit_price: "Price per unit at the time the order was placed — a snapshot, not the current products.price"
+
+  refunds:
+    description: "Refund records — only exists for orders with status = 'refunded'"
+    columns:
+      id: "Unique refund identifier"
+      order_id: "References orders.id"
+      refund_date: "Date the refund was issued"
+      amount: "Amount refunded"
+      reason: "Free-text reason for the refund"
+
+  sessions:
+    description: "Website browsing sessions, including anonymous (non-logged-in) visitors"
+    columns:
+      id: "Unique session identifier"
+      customer_id: "References customers.id — NULL if the visitor was not logged in (anonymous browsing)"
+      session_start: "Timestamp when the session began"
+      session_end: "Timestamp when the session ended, may be NULL if the session is ongoing or was never properly closed"
+      device: "Device type used for the session — mobile, desktop, or tablet"

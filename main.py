@@ -6,6 +6,7 @@ import psycopg
 import sqlglot
 from sqlglot.expressions import Select
 import time
+from retriever import get_relevant_tables, build_schema_text
 
 
 load_dotenv()
@@ -77,6 +78,8 @@ class Question(BaseModel):
 
 @app.post("/ask")
 def ask(q: Question):
+    relevant_tables = get_relevant_tables(q.question, top_k=3)
+    schema_text = build_schema_text(relevant_tables)
     body = {
         "system_instruction": {
             "parts": [{"text": "You are a helpful assistant that always responds in the requested JSON format. Always use valid PostgreSQL syntax — for example, use INTERVAL '30 days' (number and unit together in one string), not INTERVAL '30' DAYS."}]
@@ -84,7 +87,7 @@ def ask(q: Question):
         "contents": [
             {"parts": [{"text": f"""
                 Database schema:
-                {SCHEMA_DESCRIPTION}
+                {schema_text}
 
                 Question: {q.question}
                 """}]}
@@ -141,6 +144,6 @@ def ask(q: Question):
         raise
 
     # rows = cur.fetchall()
-
+    print(f"Prompt tokens used: {data['usageMetadata']['promptTokenCount']}")
     parsed["rows"] = rows
     return parsed
